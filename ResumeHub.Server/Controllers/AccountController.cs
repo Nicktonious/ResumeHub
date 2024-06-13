@@ -1,25 +1,39 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ResumeHub.Server;
+using ResumeHub.Server.Models;
 using ResumeHub.Server.Services;
 using System.Security.Cryptography;
 using System.Text;
 
-[Route("auth")]
+[Route("api")]
 [ApiController]
 public class AccountController : ControllerBase
 {
-    private readonly FileUserService _fileUserService;
+    private readonly IFileUserService _fileUserService;
+    private readonly IJwtTokenService _jwtTokenService;
 
-    public AccountController(FileUserService fileUserService)
+    public AccountController(IFileUserService fileUserService,
+                             IJwtTokenService jwtTokenService)
     {
         _fileUserService = fileUserService;
+        _jwtTokenService = jwtTokenService;
     }
 
-    [HttpPost("register")]
-    public IActionResult Register(string username, string password)
+    [Route("get")]
+    [HttpGet]
+    public IEnumerable<int> Gett()
     {
-        var existingUser = _fileUserService.GetUser(username);
-        if (existingUser != null)
+        return Enumerable.Range(1, 5).ToArray();
+    }
+
+    [Route("register")]
+    [HttpPost]
+    public IActionResult Register([FromBody] RegisterModel data)
+    {
+        string username = data.Username;
+        string password = data.Password;
+        User? existingUser = _fileUserService.GetUser(username);
+        if (existingUser is User)
         {
             return BadRequest("Пользователь уже существует.");
         }
@@ -30,12 +44,16 @@ public class AccountController : ControllerBase
         var newUser = new User(Guid.NewGuid(), username, passwordHash);
         _fileUserService.SaveUser(newUser);
 
-        return Ok("Пользователь успешно зарегистрирован.");
+        var tokenString = _jwtTokenService.GenerateToken(newUser.Id.ToString());
+        return Ok(new { Token = tokenString });
     }
 
-    [HttpPost("login")]
-    public IActionResult Login(string username, string password)
+    [Route("login")]
+    [HttpPost]
+    public IActionResult Login([FromBody] RegisterModel data)
     {
+        string username = data.Username;
+        string password = data.Password;
         var user = _fileUserService.GetUser(username);
         if (user == null)
         {
@@ -49,11 +67,34 @@ public class AccountController : ControllerBase
             return Unauthorized("Неверный пароль.");
         }
 
-        // Здесь должна быть логика создания и отправки токена аутентификации,
-        // но для простоты мы просто вернем ОК.
-        return Ok("Успешный вход в систему.");
+        var tokenString = _jwtTokenService.GenerateToken(user.Id.ToString());
+        return Ok(new { Token = tokenString });
     }
 
+    [Route("updateUserData")]
+    [HttpPatch]
+    public IActionResult UpdateUserData([FromBody] UserDataModel data)
+    {
+        if (_fileUserService.UpdateUsersData(data))
+            return Ok(data);
+        return BadRequest();
+
+    }
+
+    [Route("userdata")]
+    [HttpPost]
+    public IActionResult GetUserData([FromBody] UsernameModel data)
+    {
+        var foundData = _fileUserService.GetUsersData().FirstOrDefault(d => d.Username == data.Username);
+        if (foundData != null)
+        {
+            return Ok(foundData);
+        }
+        return NotFound();
+    }
+    [Route("resume")]
+    [HttpPost]
+    public IActionResult AddResume([FromBody] UsernameModel data)
     private string HashPassword(string password)
     {
         using (var sha256 = SHA256.Create())

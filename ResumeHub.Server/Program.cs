@@ -1,6 +1,9 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using ResumeHub.Server.Data;
 using ResumeHub.Server.Services;
 using System.Reflection.PortableExecutable;
+using System.Text;
 
 namespace ResumeHub.Server
 {
@@ -14,8 +17,8 @@ namespace ResumeHub.Server
 
             builder.Services.AddControllers();
             builder.Services.AddTransient<IResumesService, ResumesService>();
-            var filePath = "usersDB.json"; // Укажите путь к файлу напрямую
-            builder.Services.AddSingleton<IFileUserService>(_ => new FileUserService(filePath));
+            builder.Services.AddTransient<IFileUserService, FileUserService>();
+            builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
             //builder.Services.AddSingleton<ResumesDataContext>();
 
             builder.Services.AddCors(options =>
@@ -34,7 +37,25 @@ namespace ResumeHub.Server
                     // .AllowCredentials() // Если нужно отправлять учетные данные (куки, заголовки авторизации)
                 });
             });
-            
+
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                    ValidAudience = builder.Configuration["Jwt:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+                };
+            });
 
             var app = builder.Build();
 
@@ -47,7 +68,7 @@ namespace ResumeHub.Server
 
             app.UseHttpsRedirection();
 
-            //app.UseAuthorization();
+            app.UseAuthorization();
 
 
             app.MapControllers();

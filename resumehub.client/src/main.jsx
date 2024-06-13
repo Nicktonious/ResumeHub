@@ -4,12 +4,17 @@ import App from './App.jsx'
 import './index.css'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import ResumeList from './ResumeList.jsx';
-import AccountPage from '../AccountPage.jsx';
+import AccountPage from './AccountPage.jsx';
+import PersonalCabinet from './PersonalCabinet.jsx';
+import { AppContextProvider } from './AppContext.jsx';
+import PersonalDataCabinet from './PersonalDataCabinet.jsx';
+import MyResume from './MyResume.jsx';
+
 
 export const router = createBrowserRouter([
     {
         path: '/',
-        element: <App/>,
+        element: <App />,
         children: [
             {
                 path: 'resumes',
@@ -21,15 +26,31 @@ export const router = createBrowserRouter([
             },
             {
                 path: 'account',
-                element: <AccountPage/>
+                element: <AccountPage />
+            },
+            {
+                path: 'cabinet/*',
+                element: <PersonalCabinet />,
+                children: [
+                    {
+                        path: 'mydata',
+                        element: <PersonalDataCabinet/>
+                    },
+                    {
+                        path: 'myresume',
+                        element: <MyResume/>
+                    }
+                ]
             }
         ]
     }
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <RouterProvider router={router} />
-    {/* <App /> */}
-  </React.StrictMode>,
+    <React.StrictMode>
+        <AppContextProvider>
+            <RouterProvider router={router} />
+            {/* <App /> */}
+        </AppContextProvider>
+    </React.StrictMode>
 )

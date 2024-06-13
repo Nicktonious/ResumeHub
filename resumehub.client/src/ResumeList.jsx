@@ -1,21 +1,12 @@
-// src/components/ResumeList.jsx
-// import React from 'react';
 import Resume from "./Resume";
 
 let listStyle = {
     display: 'flex',
+    gap: '25px',
     flexDirection: 'column',
     alignItems: 'center',
     marginTop: '20px'
 };
-
-// let resumeStyle = {
-//     width: '80%',
-//     padding: '10px',
-//     margin: '10px 0',
-//     border: '1px solid #ddd',
-//     borderRadius: '4px'
-// };
 
 export default function ResumeList() {
     const resumes = [
@@ -25,7 +16,7 @@ export default function ResumeList() {
             email: 'aleksey@example.com',
             position: 'Backend Developer',
             experience: '5',
-            skills: ['Node.js', 'Express', 'MongoDB', 'Docker'],
+            skills: ['Node.js', 'Express', 'MongoDB', 'Docker', 'React', 'Redux', 'TypeScript', 'Webpack'],
         },
         {
             id: 2,

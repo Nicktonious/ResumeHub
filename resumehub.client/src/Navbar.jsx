@@ -23,6 +23,7 @@ export default function Navbar() {
             <Link to = "/resumes" style={linkStyle}>Резюме</Link>
             <Link to = "/vacancies" style={linkStyle}>Вакансии</Link>
             <Link to = "/account" style={linkStyle}>Аккаунт</Link>
+            <Link to = "/cabinet/mydata" style={linkStyle}>Личный кабинет</Link>
         </nav>
     );
 }

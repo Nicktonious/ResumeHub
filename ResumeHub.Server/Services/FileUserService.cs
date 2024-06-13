@@ -3,53 +3,163 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Linq;
-using ResumeHub.Server;
-using ResumeHub.Server.Services;
+using ResumeHub.Server.Models;
 
 namespace ResumeHub.Server.Services
 {
     public class FileUserService : IFileUserService
     {
-        private readonly string _filePath;
+        private string _usersListFilePath;
+        private string _usersDataFilePath;
 
-        public FileUserService(string filePath)
+        public string UsersListFilePath
         {
-            _filePath = filePath;
+            get => _usersListFilePath;
+            set => _usersListFilePath = value;
+        }
+        public string UsersDataFilePath
+        {
+            get => _usersDataFilePath;
+            set => _usersDataFilePath = value;
+        }
+
+        public FileUserService(string filePath1 = "usersDB.json", string filePath2 = "usersDataDB.json")
+        {
+            _usersListFilePath = filePath1;
+            _usersDataFilePath = filePath2;
         }
 
         public bool SaveUser(User user)
         {
-            List<User> users = new List<User>();
-            if (File.Exists(_filePath))
-            {
-                // Десериализация существующих пользователей, если файл уже существует
-                string existingUsersJson = File.ReadAllText(_filePath);
-                users = JsonSerializer.Deserialize<List<User>>(existingUsersJson) ?? new List<User>();
-            }
-            else return false;
+            var users = GetAllUsers().ToList();
+            if (users.Any(u => u.Username == user.Username))
+                return false;
 
-            // Добавляем нового пользователя в список
             users.Add(user);
-
-            // Сериализация обновленного списка пользователей в JSON
-            string usersJson = JsonSerializer.Serialize(users, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(_filePath, usersJson);
-            return true;
+            return WriteUsersToFile(users);
         }
 
-        public User GetUser(string username)
+        public bool UpdateUser(User user)
         {
-            if (!File.Exists(_filePath))
+            var users = GetAllUsers().ToList();
+            var existingUserIndex = users.FindIndex(u => u.Username == user.Username);
+            if (existingUserIndex == -1)
+                return false;
+
+            users[existingUserIndex] = user;
+            return WriteUsersToFile(users);
+        }
+
+        public bool DeleteUser(string username)
+        {
+            var users = GetAllUsers().ToList();
+            var user = users.FirstOrDefault(u => u.Username == username);
+            if (user == null)
+                return false;
+
+            users.Remove(user);
+            return WriteUsersToFile(users);
+        }
+
+        public User? GetUser(string username)
+        {
+            return GetAllUsers().FirstOrDefault(u => u.Username == username);
+        }
+
+        public IEnumerable<User> GetAllUsers()
+        {
+            if (!File.Exists(UsersListFilePath))
+                return Enumerable.Empty<User>();
+
+            try
             {
-                return null;
+                string usersJson = File.ReadAllText(UsersListFilePath);
+                return JsonSerializer.Deserialize<List<User>>(usersJson) ?? new List<User>();
             }
+            catch (Exception ex)
+            {
+                // Логирование ошибки ex
+                return Enumerable.Empty<User>();
+            }
+        }
 
-            // Чтение и десериализация файла
-            string usersJson = File.ReadAllText(_filePath);
-            List<User> users = JsonSerializer.Deserialize<List<User>>(usersJson) ?? new List<User>();
+        public IEnumerable<UserDataModel> GetUsersData()
+        {
+            if (!File.Exists(UsersDataFilePath))
+                return Enumerable.Empty<UserDataModel>();
 
-            // Поиск пользователя по имени
-            return users.FirstOrDefault(u => u.Username == username);
+            try
+            {
+                string usersJson = File.ReadAllText(UsersDataFilePath);
+                return JsonSerializer.Deserialize<List<UserDataModel>>(usersJson) ?? new List<UserDataModel>();
+            }
+            catch (Exception ex)
+            {
+                // Логирование ошибки ex
+                return Enumerable.Empty<UserDataModel>();
+            }
+        }
+        public bool WriteUsersToFile(List<User> users)
+        {
+            try
+            {
+                string usersJson = JsonSerializer.Serialize(users, new JsonSerializerOptions { WriteIndented = true });
+                File.WriteAllText(UsersListFilePath, usersJson);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // Логирование ошибки ex
+                return false;
+            }
+        }
+        public bool WriteUsersDataToFile(List<UserDataModel> data)
+        {
+            try
+            {
+                string usersJson = JsonSerializer.Serialize(data, 
+                    new JsonSerializerOptions { WriteIndented = true }
+                );
+                File.WriteAllText(UsersDataFilePath, usersJson);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // Логирование ошибки ex
+                return false;
+            }
+        }
+        public bool UpdateUsersData(UserDataModel data)
+        {
+            var usersData = GetUsersData().ToList();
+            UserDataModel? userData = usersData.FirstOrDefault(d => d.Username == data.Username);
+            if (userData is null)
+            {
+                usersData.Add(data);
+            }
+            else
+            {
+                usersData.Remove(userData);
+                UserDataModel updData = new UserDataModel(
+                    data.Username,
+                    !string.IsNullOrWhiteSpace(data.FullName) ? data.FullName : userData.FullName,
+                    !string.IsNullOrWhiteSpace(data.Gender) ? data.Gender : userData.Gender,
+                    data.BirthDate,
+                    !string.IsNullOrWhiteSpace(data.Specialization) ? data.Specialization : userData.Specialization,
+                    !string.IsNullOrWhiteSpace(data.Qualification) ? data.Qualification : userData.Qualification,
+                    data.Skills.Count > 0 ? data.Skills : userData.Skills
+                );
+                usersData.Add(updData);
+            }
+            try
+            {
+                WriteUsersDataToFile(usersData);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }

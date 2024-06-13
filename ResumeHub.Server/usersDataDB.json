@@ -1,0 +1,16 @@
+[
+  {
+    "Username": "vova",
+    "FullName": "\u0412\u043E\u0432\u0430\u0430\u043D\u044B\u0447",
+    "Gender": "male",
+    "BirthDate": "2000-03-01",
+    "Specialization": "\u0420\u0430\u0437\u0440\u0430\u0431\u043E\u0442\u043A\u0430",
+    "Qualification": "junior",
+    "Skills": [
+      "Git",
+      "SQL",
+      "JavaScript",
+      "HTML"
+    ]
+  }
+]
