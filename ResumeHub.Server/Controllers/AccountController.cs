@@ -92,9 +92,6 @@ public class AccountController : ControllerBase
         }
         return NotFound();
     }
-    [Route("resume")]
-    [HttpPost]
-    public IActionResult AddResume([FromBody] UsernameModel data)
     private string HashPassword(string password)
     {
         using (var sha256 = SHA256.Create())

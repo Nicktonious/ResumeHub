@@ -4,8 +4,9 @@ namespace ResumeHub.Server.Services
 {
     public interface IResumesService
     {
-        IEnumerable<ResumeModel> GetAllResumes();
-        ResumeModel? GetResumeById(string id);
-        void AddResume(ResumeModel resume);
+        Task<IEnumerable<ResumeModel>> GetResumesAsync(int startIndex, int count);
+        Task<ResumeModel?> GetResumeByUsernameAsync(string username);
+        Task<bool> AddOrUpdateResumeAsync(ResumeModel resume);
+        Task<bool> DeleteResumeAsync(string username);
     }
 }

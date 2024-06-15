@@ -1,48 +1,58 @@
-﻿using ResumeHub.Server.Models;
-using System.Text.Json;
+﻿using System.Text.Json;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using ResumeHub.Server.Models;
+using ResumeHub.Server.Services;
 
-namespace ResumeHub.Server.Services
+public class ResumesService : IResumesService
 {
-    public class ResumesService : IResumesService
+    private readonly string _filePath = "resumesDB.json";
+    private readonly IJsonIOService<ResumeModel> _jsonIOService;
+    public ResumesService(IJsonIOService<ResumeModel> jsonIOService)
     {
-        //private readonly List<ResumeModel> _resumes;
-        private JsonIOService<ResumeModel> _jsonIOService;
-        public ResumesService()
-        {
-            // Инициализируем список резюме
-            //_resumes = new List<ResumeModel>();
-            _jsonIOService = new JsonIOService<ResumeModel>("\\Data\\");
-        }
-        public string GetAllResumesSerialized()
-        {
-            return _jsonIOService.Read("resumes");
-        }
-        public IEnumerable<ResumeModel> GetAllResumes()
-        {
-            // Возвращаем все резюме
-            string json = GetAllResumesSerialized();
-            try
-            {
-                var result = JsonSerializer.Deserialize<List<ResumeModel>>(json);
-                if (result is List<ResumeModel> && result.Count > 0) return result;
-                else throw new Exception("Failed to decerialize");
-            }
-            catch (Exception ex) { throw new Exception("Failed to decerialize"); }
-        }
+        _jsonIOService = jsonIOService;
+    }
 
-        public ResumeModel? GetResumeById(string id)
-        {
-            // Находим резюме по идентификатору
-            return GetAllResumes().FirstOrDefault(r => r.Id == id);
-        }
+    public async Task<IEnumerable<ResumeModel>> GetResumesAsync(int startIndex, int count)
+    {
+        var resumes = await _jsonIOService.ReadAsync(_filePath);
+        return resumes.Skip(startIndex).Take(count);
+    }
 
-        public void AddResume(ResumeModel resume)
+    public async Task<bool> AddOrUpdateResumeAsync(ResumeModel resume)
+    {
+        var resumes = await _jsonIOService.ReadAsync(_filePath);
+        int ind = resumes.ToList().FindIndex(r => r.Username == resume.Username);
+        
+        if (ind != -1)
         {
-            // Добавляем новое резюме в список
-            var resumes = GetAllResumes() as List<ResumeModel>;
-            if (resumes is null) resumes = new List<ResumeModel>();
+            resumes.ToList()[ind] = resume;
+        }
+        else
+        {
             resumes.ToList().Add(resume);
-            _jsonIOService.Write(resumes);
         }
+        await _jsonIOService.WriteAsync(_filePath, resumes);
+        return true;
+    }
+
+    public async Task<bool> DeleteResumeAsync(string username)
+    {
+        var resumes = await _jsonIOService.ReadAsync(_filePath);
+        var resumeToDelete = resumes.FirstOrDefault(r => r.Username == username);
+        if (resumeToDelete != null)
+        {
+            resumes.ToList().Remove(resumeToDelete);
+            await _jsonIOService.WriteAsync(_filePath, resumes);
+            return true;
+        }
+        return false;
+    }
+
+    public async Task<ResumeModel?> GetResumeByUsernameAsync(string username)
+    {
+        var resumes = await _jsonIOService.ReadAsync(_filePath);
+        return resumes.FirstOrDefault(s => s.Username == username);
     }
 }
