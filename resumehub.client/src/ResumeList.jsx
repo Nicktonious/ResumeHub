@@ -72,6 +72,7 @@ export default function ResumeList() {
         if (!resumes) 
             getResumes()
             .then(result => {
+                console.log(result);
                 setAllResumes(result.concat(defaultResumes));
                 setResumes(result.concat(defaultResumes));
             })

@@ -33,7 +33,7 @@ export default function validateUserData(userData) {
     }
 
     // Проверка навыков (массив строк без спецсимволов)
-    if (!Array.isArray(userData.skills) || !userData.skills.every(skill => typeof skill === 'string' && textRegex.test(skill)) || userData.skills.length < 3) {
+    if (!Array.isArray(userData.skills) || !userData.skills.every(skill => typeof skill === 'string')) {
         if (userData.skills.length < 3) 
             return { isValid: false, msg: "Введите хотя бы 3 навыка" };
         return { isValid: false, msg: "Навыки содержат недопустимые символы" };

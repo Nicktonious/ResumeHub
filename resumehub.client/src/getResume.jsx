@@ -27,10 +27,9 @@ const getResumes = async () => {
     }
     let result = await response.json();
 
-    return result.usersData.map(data => {
-        let aboutMe = result.resumes.find(r => r.username == data.username)?.text;
-        data.text = aboutMe;
-        return data;
+    return result.resumes.map(r => {
+        let userData = result.usersData.find(data => r.username == data.username);
+        return Object.assign(userData, r);
     });
 }
 

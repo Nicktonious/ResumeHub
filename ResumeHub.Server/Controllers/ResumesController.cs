@@ -29,7 +29,7 @@ namespace ResumeHub.Server.Controllers
             }
             return Ok(resume);
         }
-        [HttpDelete("username")]
+        [HttpDelete("{username}")]
         public async Task<ActionResult> DeleteDesume(string username)
         {
             bool res = await _resumesService.DeleteResumeAsync(username);

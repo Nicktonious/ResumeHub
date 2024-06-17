@@ -6,6 +6,7 @@ import LoadingPage from './LoadingPage';
 import sendResume from './sendResume';
 import getResume from './getResume';
 import Message from './Message';
+import deleteResume from './deleteResume';
 
 function MyResumePage() {
     const [aboutMeText, setAboutMeText] = useState('');
@@ -16,7 +17,7 @@ function MyResumePage() {
     const [message2, setMessage2] = useState(<Message text='' type='normal'/>);
     const [dataLoadedSuccessfully, setDataLoadedSuccessfully] = useState(false);
     let inputWas = false;
-
+    
     useEffect(() => {
         if (!userData) getUserData(localStorage.getItem('username'))
         .then(data => {
@@ -67,7 +68,13 @@ function MyResumePage() {
                         }
                     }>Разместить резюме</button>
                     {dataLoadedSuccessfully 
-                        ? <button className={styles.btn}>Удалить ранее загруженное резюме</button>
+                        ? <button className={styles.btn}
+                            onClick={() => {
+                                deleteResume(localStorage.getItem('username'))
+                                .then(() => setMessage2(<Message text="Резюме удалено" type="normal"/>))
+                                .catch(() => setMessage2(<Message text="Не удалось удалить резюме" type='error'/>));
+                            }}
+                        >Удалить ранее загруженное резюме</button>
                         : <></>
                     }
                 </div>

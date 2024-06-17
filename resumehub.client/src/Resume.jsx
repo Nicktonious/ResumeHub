@@ -9,17 +9,17 @@ function Resume({ name, surname, email, specialization, qualification='', experi
             <div className={styles.text}>{email}</div>
             <div className={styles.text}>{`${specialization} ${qualification.length? ': '+qualification:''}`}</div>
             <div className={styles.text}>Опыт работы: {experience} год(а)</div>
-            {text?.length && (
-                <div className={styles.text}>
-                    <div className={styles.text}>{text}</div>
-                </div>
-            )}
             <div className={styles.text}>Навыки:</div>
             <ul className={styles.list}>
                 {skills.map((skill, index) => (
                     <li key={index} className={styles.listItem}>{skill}</li>
                 ))}
             </ul>
+            {text?.length && (
+                <div className={styles.text}>
+                    <div className={styles.text}>{text}</div>
+                </div>
+            )}
         </div>
     );
 }
