@@ -1,7 +1,10 @@
 import { useState } from 'react';
 // import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AppContext';
-import PersonalDataCabinet from './PersonalDataCabinet';
+// import PersonalCabinet from './PersonalCabinet';
+import { Navigate } from 'react-router-dom';
+import Message from './Message';
+import validateCredentials from './validateCredentials';
 
 const styles = {
     container: {
@@ -40,20 +43,26 @@ const styles = {
         textAlign: 'center',
     },
 };
+const emptyMsg = <Message text='' type='normal'/>;
 
 const serverUrl = 'https://localhost:7011';
 
-const AccountPage = () => {
+const LoginPage = () => {
+    const [message, setMessage] = useState(emptyMsg);
     const [isLoginView, setIsLoginView] = useState(true);
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [checkPassword, setCheckPassword] = useState('');
-    let { isAuthenticated, setIsAuthenticated } = useAuth();
-    // const navigate = useNavigate();
+    const { isAuthenticated, setIsAuthenticated } = useAuth();
 
-    const handleAuth = async (username, password) => {
+    const handleAuth = async (username, password, password2) => {
+        let { isValid, msg } = validateCredentials(username, password, password2);
+
+        if (!isValid) {
+            setMessage(<Message text={msg} type='error'/>);
+            return;
+        }
         try {
-            console.log({username, password});
             const url = isLoginView ? `${serverUrl}/api/login` : `${serverUrl}/api/register`;
             const response = await fetch(url, {
                 method: 'POST',
@@ -70,15 +79,17 @@ const AccountPage = () => {
             localStorage.setItem('username', username); // Сохраняем токен
             setIsAuthenticated(true)
             
-            // navigate('/dashboard'); // Перенаправляем на страницу личного кабинета
         } catch (error) {
-            console.error('Ошибка', error);
+            let errMsg = <Message text={error.message} type='error'/>
+            setMessage(errMsg);
         }
     }
 
     const logRegForm = (
         <div style={styles.container}>
             {/* <h2>{isLoginView ? 'Вход в аккаунт' : 'Создание аккаунта'}</h2> */}
+            {message}
+
             <div>
                 <input
                     type="text"
@@ -103,7 +114,11 @@ const AccountPage = () => {
                     onChange={(e) => setCheckPassword(e.target.value)}
                 />) : (<div></div>) }
 
-                <button onClick={()=>handleAuth(username, password)} style={styles.button}>
+                <button onClick={
+                    ()=>{
+                        handleAuth(username, password, isLoginView ? password : checkPassword);
+                    }
+                    } style={styles.button}>
                     {isLoginView ? 'Войти' : 'Зарегистрироваться'}
                 </button>
                 <div style={styles.centerText}>
@@ -116,9 +131,12 @@ const AccountPage = () => {
             </div>
         </div>
     );
-
-    return isAuthenticated ? <PersonalDataCabinet/> : logRegForm;
+    if (isAuthenticated) {
+        return <Navigate to="/account" replace />;
+    } else
+        return logRegForm;
+    // return isAuthenticated ? <PersonalCabinet/> : logRegForm;
 };
 
 
-export default AccountPage;
+export default LoginPage;

@@ -3,6 +3,6 @@
     public interface IJsonIOService<T> where T : class
     {
         Task<IEnumerable<T>> ReadAsync(string fileName);
-        Task WriteAsync(string fileName, IEnumerable<T> data);
+        Task<bool> WriteAsync(string fileName, IEnumerable<T> data);
     }
 }

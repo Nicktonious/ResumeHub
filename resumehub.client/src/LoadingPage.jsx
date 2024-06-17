@@ -1,11 +1,9 @@
-import styles from './LoadingPage.module.css'; // Импортируем стили
-
-function LoadingPage() {
-    return (
-        <div className="loadingPage" style={styles}>
-            <div className="loader"></div>
-        </div>
-    );
-}
+const LoadingPage = () => {
+  return (
+    <div className="loading-container">
+      <div className="loader"></div>
+    </div>
+  );
+};
 
 export default LoadingPage;

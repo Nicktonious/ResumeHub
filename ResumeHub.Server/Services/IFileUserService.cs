@@ -4,15 +4,13 @@ namespace ResumeHub.Server.Services
 {
     public interface IFileUserService
     {
-        string UsersListFilePath { get; set; }
-        bool SaveUser(User user);
-        User? GetUser(string username);
-        bool UpdateUser(User user);
-        bool DeleteUser(string username);
-        public IEnumerable<UserDataModel> GetUsersData();
-        bool WriteUsersToFile(List<User> users);
-        IEnumerable<User> GetAllUsers();
-        bool WriteUsersDataToFile(List<UserDataModel> data);
-        bool UpdateUsersData(UserDataModel data);
+        Task<bool> SaveUserAsync(UserModel user);
+        Task<UserModel?> GetUserAsync(string username);
+        Task<bool> DeleteUserAsync(string username);
+        Task<IEnumerable<UserDataModel>> GetUsersDataAsync();
+        //Task<bool> WriteUsersToFile(List<UserModel> users);
+        Task<IEnumerable<UserModel>> GetAllUsersAsync();
+        Task<bool> SaveUsersDataAsync(IEnumerable<UserDataModel> data);
+        Task<bool> AddOrUpdateUserDataAsync(UserDataModel data);
     }
 }

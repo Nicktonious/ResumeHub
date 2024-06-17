@@ -1,30 +1,30 @@
-import { useEffect, useState } from 'react';
+// import { useEffect, useState } from 'react';
+// import { getResumes } from './getResume';
+// import LoadingPage from './LoadingPage';
+// import ResumeList from './ResumeList';
 
-function ResumesPage() {
-    const [resumes, setResumes] = useState([]);
+// function ResumesPage() {
+//     const [resumes, setResumes] = useState(null);
 
-    useEffect(() => {
-        getResumes();
-    }, []);
+//     useEffect(() => {
+//         if (!resumes) 
+//             getResumes()
+//             .then(r => {
+//                 setResumes(r);
+//             })
+//             .catch(() => {
+//                 ResumeList
+//             })
+//     }, []);
 
-    const getResumes = async function () {
-        try {
-            const response = await fetch('https:localhost:7011/resumes');
-            const data = await response.json();
-            setResumes(data);
-        
-        } catch (error) {
-            console.error('������ ��� �������� �������:', error);
-        }
-    }
 
-    return (
-        <div>
-            {resumes.map((resume) => {
-                <div>{resume}</div>
-            })}
-        </div>
-    );
-}
+//     return !resumes ? <LoadingPage/> : (
+//         <div>
+//             {resumes.map((resume) => {
+//                 <div>{resume}</div>
+//             })}
+//         </div>
+//     );
+// }
 
-export default ResumesPage;
+// export default ResumesPage;

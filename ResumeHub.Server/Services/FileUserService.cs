@@ -9,157 +9,72 @@ namespace ResumeHub.Server.Services
 {
     public class FileUserService : IFileUserService
     {
-        private string _usersListFilePath;
-        private string _usersDataFilePath;
+        private string _usersListFilePath = "usersDB.json";
+        private string _usersDataFilePath = "usersDataDB.json";
+        private JsonIOService<UserDataModel> _dataJsonIOService = new JsonIOService<UserDataModel>();
+        private JsonIOService<UserModel> _userJsonIOService = new JsonIOService<UserModel>();
 
-        public string UsersListFilePath
+        public async Task<bool> SaveUserAsync(UserModel user)
         {
-            get => _usersListFilePath;
-            set => _usersListFilePath = value;
-        }
-        public string UsersDataFilePath
-        {
-            get => _usersDataFilePath;
-            set => _usersDataFilePath = value;
-        }
-
-        public FileUserService(string filePath1 = "usersDB.json", string filePath2 = "usersDataDB.json")
-        {
-            _usersListFilePath = filePath1;
-            _usersDataFilePath = filePath2;
-        }
-
-        public bool SaveUser(User user)
-        {
-            var users = GetAllUsers().ToList();
+            var users = await _userJsonIOService.ReadAsync(_usersListFilePath);
             if (users.Any(u => u.Username == user.Username))
                 return false;
 
-            users.Add(user);
-            return WriteUsersToFile(users);
+            users = users.Append(user);
+            try { 
+                await _userJsonIOService.WriteAsync(_usersListFilePath, users);
+                return true;
+            } catch { return false; }
         }
 
-        public bool UpdateUser(User user)
+        public async Task<bool> DeleteUserAsync(string username)
         {
-            var users = GetAllUsers().ToList();
-            var existingUserIndex = users.FindIndex(u => u.Username == user.Username);
-            if (existingUserIndex == -1)
-                return false;
-
-            users[existingUserIndex] = user;
-            return WriteUsersToFile(users);
-        }
-
-        public bool DeleteUser(string username)
-        {
-            var users = GetAllUsers().ToList();
+            var users = await _userJsonIOService.ReadAsync(_usersListFilePath);
             var user = users.FirstOrDefault(u => u.Username == username);
-            if (user == null)
-                return false;
-
-            users.Remove(user);
-            return WriteUsersToFile(users);
-        }
-
-        public User? GetUser(string username)
-        {
-            return GetAllUsers().FirstOrDefault(u => u.Username == username);
-        }
-
-        public IEnumerable<User> GetAllUsers()
-        {
-            if (!File.Exists(UsersListFilePath))
-                return Enumerable.Empty<User>();
+            if (user == null) return true;
+            users = users.Where(u => u.Username != username);
 
             try
             {
-                string usersJson = File.ReadAllText(UsersListFilePath);
-                return JsonSerializer.Deserialize<List<User>>(usersJson) ?? new List<User>();
-            }
-            catch (Exception ex)
-            {
-                // Логирование ошибки ex
-                return Enumerable.Empty<User>();
-            }
-        }
-
-        public IEnumerable<UserDataModel> GetUsersData()
-        {
-            if (!File.Exists(UsersDataFilePath))
-                return Enumerable.Empty<UserDataModel>();
-
-            try
-            {
-                string usersJson = File.ReadAllText(UsersDataFilePath);
-                return JsonSerializer.Deserialize<List<UserDataModel>>(usersJson) ?? new List<UserDataModel>();
-            }
-            catch (Exception ex)
-            {
-                // Логирование ошибки ex
-                return Enumerable.Empty<UserDataModel>();
-            }
-        }
-        public bool WriteUsersToFile(List<User> users)
-        {
-            try
-            {
-                string usersJson = JsonSerializer.Serialize(users, new JsonSerializerOptions { WriteIndented = true });
-                File.WriteAllText(UsersListFilePath, usersJson);
+                await _userJsonIOService.WriteAsync(_usersListFilePath, users);
                 return true;
             }
-            catch (Exception ex)
-            {
-                // Логирование ошибки ex
-                return false;
-            }
+            catch { return false; }
         }
-        public bool WriteUsersDataToFile(List<UserDataModel> data)
+
+        public async Task<UserModel?> GetUserAsync(string username)
         {
-            try
-            {
-                string usersJson = JsonSerializer.Serialize(data, 
-                    new JsonSerializerOptions { WriteIndented = true }
-                );
-                File.WriteAllText(UsersDataFilePath, usersJson);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                // Логирование ошибки ex
-                return false;
-            }
+            var users = await GetAllUsersAsync();
+            return users.FirstOrDefault(u => u.Username == username);
         }
-        public bool UpdateUsersData(UserDataModel data)
+
+        public async Task<IEnumerable<UserModel>> GetAllUsersAsync()
         {
-            var usersData = GetUsersData().ToList();
-            UserDataModel? userData = usersData.FirstOrDefault(d => d.Username == data.Username);
-            if (userData is null)
-            {
-                usersData.Add(data);
-            }
-            else
-            {
-                usersData.Remove(userData);
-                UserDataModel updData = new UserDataModel(
-                    data.Username,
-                    !string.IsNullOrWhiteSpace(data.FullName) ? data.FullName : userData.FullName,
-                    !string.IsNullOrWhiteSpace(data.Gender) ? data.Gender : userData.Gender,
-                    data.BirthDate,
-                    !string.IsNullOrWhiteSpace(data.Specialization) ? data.Specialization : userData.Specialization,
-                    !string.IsNullOrWhiteSpace(data.Qualification) ? data.Qualification : userData.Qualification,
-                    data.Skills.Count > 0 ? data.Skills : userData.Skills
-                );
-                usersData.Add(updData);
-            }
-            try
-            {
-                WriteUsersDataToFile(usersData);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            if (!File.Exists(_usersListFilePath))
+                return Enumerable.Empty<UserModel>();
+
+            return await _userJsonIOService.ReadAsync(_usersListFilePath);
+        }
+
+        public Task<IEnumerable<UserDataModel>> GetUsersDataAsync()
+        {
+            return _dataJsonIOService.ReadAsync(_usersDataFilePath);
+        }
+        public async Task<bool> SaveUsersListAsync(List<UserModel> users)
+        {
+            return await _userJsonIOService.WriteAsync(_usersListFilePath, users);
+        }
+        public async Task<bool> SaveUsersDataAsync(IEnumerable<UserDataModel> data)
+        {
+            return await _dataJsonIOService.WriteAsync(_usersDataFilePath, data);
+        }
+        public async Task<bool> AddOrUpdateUserDataAsync(UserDataModel data)
+        {
+            var usersData = await GetUsersDataAsync();
+            usersData = usersData.Where(ud => ud.Username != data.Username);
+        
+            usersData = usersData.Append(data);
+            return await SaveUsersDataAsync(usersData);
         }
     }
 }

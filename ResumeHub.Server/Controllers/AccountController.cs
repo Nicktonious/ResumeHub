@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using ResumeHub.Server;
 using ResumeHub.Server.Models;
 using ResumeHub.Server.Services;
 using System.Security.Cryptography;
@@ -28,12 +27,12 @@ public class AccountController : ControllerBase
 
     [Route("register")]
     [HttpPost]
-    public IActionResult Register([FromBody] RegisterModel data)
+    public async Task<IActionResult> Register([FromBody] RegisterModel data)
     {
         string username = data.Username;
         string password = data.Password;
-        User? existingUser = _fileUserService.GetUser(username);
-        if (existingUser is User)
+        UserModel? existingUser = await _fileUserService.GetUserAsync(username);
+        if (existingUser is UserModel)
         {
             return BadRequest("Пользователь уже существует.");
         }
@@ -41,8 +40,8 @@ public class AccountController : ControllerBase
         // Хеширование пароля перед сохранением
         var passwordHash = HashPassword(password);
 
-        var newUser = new User(Guid.NewGuid(), username, passwordHash);
-        _fileUserService.SaveUser(newUser);
+        var newUser = new UserModel(Guid.NewGuid(), username, passwordHash);
+        await _fileUserService.SaveUserAsync(newUser);
 
         var tokenString = _jwtTokenService.GenerateToken(newUser.Id.ToString());
         return Ok(new { Token = tokenString });
@@ -50,11 +49,11 @@ public class AccountController : ControllerBase
 
     [Route("login")]
     [HttpPost]
-    public IActionResult Login([FromBody] RegisterModel data)
+    public async Task<IActionResult> Login([FromBody] RegisterModel data)
     {
         string username = data.Username;
         string password = data.Password;
-        var user = _fileUserService.GetUser(username);
+        var user = await _fileUserService.GetUserAsync(username);
         if (user == null)
         {
             return NotFound("Пользователь не найден.");
@@ -73,9 +72,10 @@ public class AccountController : ControllerBase
 
     [Route("updateUserData")]
     [HttpPatch]
-    public IActionResult UpdateUserData([FromBody] UserDataModel data)
+    public async Task<IActionResult> UpdateUserData([FromBody] UserDataModel data)
     {
-        if (_fileUserService.UpdateUsersData(data))
+        var succuess = await _fileUserService.AddOrUpdateUserDataAsync(data);
+        if (succuess)
             return Ok(data);
         return BadRequest();
 
@@ -83,12 +83,13 @@ public class AccountController : ControllerBase
 
     [Route("userdata")]
     [HttpPost]
-    public IActionResult GetUserData([FromBody] UsernameModel data)
+    public async Task<IActionResult> GetUserData([FromBody] UsernameModel data)
     {
-        var foundData = _fileUserService.GetUsersData().FirstOrDefault(d => d.Username == data.Username);
+        var foundData = await _fileUserService.GetUsersDataAsync();
+        var userdata = foundData.FirstOrDefault(d => d.Username == data.Username);
         if (foundData != null)
         {
-            return Ok(foundData);
+            return Ok(userdata);
         }
         return NotFound();
     }

@@ -21,7 +21,7 @@ namespace ResumeHub.Server
             builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
             //builder.Services.AddTransient<IJsonIOService, JsonIOService>();
             //builder.Services.AddSingleton<ResumesDataContext>();
-            builder.Services.AddSingleton<IJsonIOServiceFactory, JsonIOServiceFactory>();
+            //builder.Services.AddSingleton<IJsonIOServiceFactory, JsonIOServiceFactory>();
 
             builder.Services.AddCors(options =>
             {

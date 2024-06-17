@@ -2,9 +2,12 @@
 {
     public record UserDataModel(
         string Username,
-        string FullName,
+        string Name,
+        string Surname,
         string Gender,
-        string BirthDate,
+        string Email,
+        int Age,
+        int Experience,
         string Specialization,
         string Qualification,
         List<string> Skills

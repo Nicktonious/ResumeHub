@@ -2,17 +2,16 @@ import PropTypes from 'prop-types'
 
 import styles from './Resume.module.css'
 
-function Resume({ fullName, email, position, experience, aboutMe, skills }) {
+function Resume({ name, surname, email, specialization, qualification='', experience, text, skills }) {
     return (
         <div className={styles.container}>
-            <div className={styles.text}>{fullName}</div>
-            <div className={styles.text}>Почта: {email}</div>
-            <div className={styles.text}>Должность/Профессия: {position}</div>
+            <div className={styles.text}>{`${name} ${surname}`}</div>
+            <div className={styles.text}>{email}</div>
+            <div className={styles.text}>{`${specialization} ${qualification.length? ': '+qualification:''}`}</div>
             <div className={styles.text}>Опыт работы: {experience} год(а)</div>
-            {aboutMe && (
+            {text?.length && (
                 <div className={styles.text}>
-                    <h3>О себе:</h3>
-                    <div className={styles.text}>{aboutMe}</div>
+                    <div className={styles.text}>{text}</div>
                 </div>
             )}
             <div className={styles.text}>Навыки:</div>
@@ -28,10 +27,12 @@ function Resume({ fullName, email, position, experience, aboutMe, skills }) {
 export default Resume;
 
 Resume.propTypes = {
-    fullName: PropTypes.string,
+    name: PropTypes.string,
+    surname: PropTypes.string,
     email: PropTypes.string,
-    position: PropTypes.string,
-    experience: PropTypes.string,
+    specialization: PropTypes.string,
+    experience: PropTypes.number,
     skills: PropTypes.arrayOf(PropTypes.string),
-    aboutMe: PropTypes.string
+    text: PropTypes.string,
+    qualification: PropTypes.string
 }

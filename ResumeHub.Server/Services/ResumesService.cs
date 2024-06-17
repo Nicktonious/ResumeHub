@@ -8,16 +8,21 @@ using ResumeHub.Server.Services;
 public class ResumesService : IResumesService
 {
     private readonly string _filePath = "resumesDB.json";
-    private readonly IJsonIOService<ResumeModel> _jsonIOService;
-    public ResumesService(IJsonIOService<ResumeModel> jsonIOService)
-    {
-        _jsonIOService = jsonIOService;
-    }
+    private readonly JsonIOService<ResumeModel> _jsonIOService = new JsonIOService<ResumeModel>();
+    //public ResumesService(IJsonIOService<ResumeModel> jsonIOService)
+    //{
+    //    _jsonIOService = jsonIOService;
+    //}
 
     public async Task<IEnumerable<ResumeModel>> GetResumesAsync(int startIndex, int count)
     {
         var resumes = await _jsonIOService.ReadAsync(_filePath);
         return resumes.Skip(startIndex).Take(count);
+    }
+    public async Task<IEnumerable<ResumeModel>> GetAllResumesAsync()
+    {
+        var resumes = await _jsonIOService.ReadAsync(_filePath);
+        return resumes;
     }
 
     public async Task<bool> AddOrUpdateResumeAsync(ResumeModel resume)
@@ -27,11 +32,12 @@ public class ResumesService : IResumesService
         
         if (ind != -1)
         {
-            resumes.ToList()[ind] = resume;
+            //resumes.ToList()[ind] = resume;
+            resumes = resumes.Select((r, i) => i == ind ? resume :r);
         }
         else
         {
-            resumes.ToList().Add(resume);
+            resumes = resumes.Append(resume);
         }
         await _jsonIOService.WriteAsync(_filePath, resumes);
         return true;
@@ -43,7 +49,7 @@ public class ResumesService : IResumesService
         var resumeToDelete = resumes.FirstOrDefault(r => r.Username == username);
         if (resumeToDelete != null)
         {
-            resumes.ToList().Remove(resumeToDelete);
+            resumes = resumes.Where(r => r.Username != username);
             await _jsonIOService.WriteAsync(_filePath, resumes);
             return true;
         }

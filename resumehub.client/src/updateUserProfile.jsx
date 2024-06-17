@@ -1,12 +1,9 @@
 export default async function updateUserProfile(profileData) {
     try {
-        console.log(1);
         const response = await fetch('https://localhost:7011/api/updateuserdata', {
             method: 'PATCH',
             headers: {
-                'Content-Type': 'application/json',
-                // Добавьте необходимые заголовки, например, для аутентификации
-                // 'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify(profileData),
         });

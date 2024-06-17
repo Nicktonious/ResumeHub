@@ -26,8 +26,8 @@ const styles = {
 function Sidebar() {
     return (
         <div style={styles.sidebar}>
-            <Link to="mydata" style={styles.block}>Личные данные</Link>
-            <Link to="myresume" style={styles.block}>Мое резюме</Link>
+            <Link to="data" style={styles.block}>Личные данные</Link>
+            <Link to="resume" style={styles.block}>Мое резюме</Link>
             {/* Добавьте дополнительные блоки-ссылки при необходимости */}
         </div>
     );

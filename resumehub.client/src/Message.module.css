@@ -1,0 +1,16 @@
+.message {
+    
+    color: yellow
+  }
+  
+  .message.normal {
+    color: #000; 
+  }
+  
+  .message.error {
+    color: #f00; 
+  }
+  
+  .message.success {
+    color: #0f0; 
+  }

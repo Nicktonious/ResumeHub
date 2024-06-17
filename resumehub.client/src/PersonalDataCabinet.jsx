@@ -3,15 +3,17 @@ import styles from './PersonalDataCabinet.module.css';
 import updateUserProfile from './updateUserProfile';
 import LoadingPage from './LoadingPage';
 import getUserData from './getUserData.jsx';
+import Message from './Message.jsx';
+import validateUserData from './validateUserData.jsx';
 
 const specializations = [
     'Разработка', 'Тестирование', 'Аналитика', 'Дизайн', 'Менеджмент',
     'Информационная безопасность', 'ИИ', 'Поддержка', 'Маркетинг', 'HR',
 ];
 const defaultData = {
-    fullName: '',
+    name: '',
+    surname: '',
     gender: '',
-    birthDate: '',
     specialization: '',
     qualification: '',
     skills: [],
@@ -63,24 +65,39 @@ const skillsOptions = [
 
 function PersonalDataCabinet() {
     const [userData, setUserData] = useState(null);
-
+    const [message, setMessage] = useState(<Message text='' type='normal'/>);
+    const [message2, setMessage2] = useState(<Message text='' type='normal'/>);
     const [customSkill, setCustomSkill] = useState('');
 
     useEffect(() => {
-        if (localStorage.getItem('userData'))
-            setUserData(localStorage('userData'))
-        else {
-            getUserData(localStorage.getItem('username'))
-            .then(data => {
-                data.skills = data.skills || [];
-                setUserData(data);
-                localStorage.setItem('userData', data)
-            }).catch(() => {
-                console.log('err');
-                setUserData(defaultData);
-            });
-        }
+        getUserData(localStorage.getItem('username'))
+        .then(data => {
+            data.skills = data.skills || [];
+            setUserData(data);
+            localStorage.setItem('userData', data);
+            setMessage(<Message text='' type='normal'/>);
+            
+        }).catch(() => {
+            setMessage(<Message text={'Заполните данные'} type={'error'} />)
+            setUserData(defaultData);
+        });
     }, []);
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        let {isValid, msg } = validateUserData(userData);
+        if (!isValid) {
+            setMessage2(<Message text={msg} type='error'/>);
+        }
+        else {
+            updateUserProfile(Object.assign(userData, {username: localStorage.getItem('username')}))
+            .then(data => {
+                setUserData(data);
+                setMessage(<Message text='Данные обновлены' type='success'/>);
+            })
+            .catch(() => setMessage(<Message text='Не удалось обновить данные' type='error'/>));
+        }
+    };
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -120,17 +137,16 @@ function PersonalDataCabinet() {
         }));
     };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        // Здесь можно отправить обновленные данные на сервер
-    };
+    return !(Object.values(userData||{}).filter(v => typeof v === 'string').length) ? <LoadingPage/> : (<div>
+        <form onSubmit={(e) => handleSubmit(e)} className={styles.container}>
+            <label className={styles.label}>Имя:</label>
+            <input className={styles.input} type="text" name="name" value={userData.name} onChange={handleInputChange} />
 
-    return !(Object.values(userData||{}).filter(v => typeof v === 'string').length) ? <LoadingPage/> : (
-        <form onSubmit={handleSubmit} className={styles.container}>
-            <label className={styles.label}>ФИО:</label>
-            {console.log('userData')}
-            {console.log(userData)}
-            <input className={styles.input} type="text" name="fullName" value={userData.fullName} onChange={handleInputChange} />
+            <label className={styles.label}>Фамилия:</label>
+            <input className={styles.input} type="text" name="surname" value={userData.surname} onChange={handleInputChange} />
+
+            <label className={styles.label}>Почта:</label>
+            <input className={styles.input} type="email" name="email" value={userData.email} onChange={handleInputChange} />
 
             <label className={styles.label}>Пол:</label>
             <select className={styles.select} name="gender" value={userData.gender} onChange={handleInputChange}>
@@ -139,8 +155,11 @@ function PersonalDataCabinet() {
                 <option value="female">Женский</option>
             </select>
 
-            <label className={styles.label}>Дата рождения:</label>
-            <input className={styles.input} type="date" name="birthDate" value={userData.birthDate} onChange={handleInputChange} />
+            <label className={styles.label}>Возраст:</label>
+            <input className={styles.input} type="number" name="age" value={userData.age} onChange={handleInputChange} />
+
+            <label className={styles.label}>Опыт работы:</label>
+            <input className={styles.input} type="number" name="experience" value={userData.experience} onChange={handleInputChange} />
 
             <label className={styles.label}>Специализация:</label>
             <select
@@ -205,7 +224,7 @@ function PersonalDataCabinet() {
                 </div>
 
                 <ul className={styles.skillList}>
-                    {userData.skills.map((skill, index) => (
+                    {userData.skills?.map((skill, index) => (
                         <li key={index} className={styles.skillItem}>
                             {skill}
                             <button className={styles.skillRemoveButton} onClick={() => removeSkill(skill)}>❌</button>
@@ -214,16 +233,11 @@ function PersonalDataCabinet() {
                 </ul>
 
             </div>
-            <button type="submit" className={styles.submitButton} onClick={
-                () => {
-                    updateUserProfile(Object.assign(userData, {
-                        username: localStorage.getItem('username')
-                    }))
-                    .then(data => setUserData(data))
-                }
-            }>Сохранить изменения</button>
+            {message2}
+            <button type="submit" className={styles.submitButton} onClick={handleSubmit}>Сохранить изменения</button>
+            {message}
         </form>
-    );
+    </div>);
 }
 
 export default PersonalDataCabinet;

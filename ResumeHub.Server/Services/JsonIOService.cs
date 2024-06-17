@@ -19,7 +19,8 @@ namespace ResumeHub.Server.Services
         {
             if (!File.Exists(fileName))
             {
-                throw new FileNotFoundException($"File {fileName} not found");
+                return new List<T>();
+                //throw new FileNotFoundException($"File {fileName} not found");
             }
 
             using (var stream = File.OpenRead(fileName))
@@ -28,7 +29,7 @@ namespace ResumeHub.Server.Services
             }
         }
 
-        public async Task WriteAsync<T>(string fileName, List<T> data)
+        public async Task<bool> WriteAsync(string fileName, IEnumerable<T> data)
         {
             string json = JsonSerializer.Serialize(data, new JsonSerializerOptions
             {
@@ -40,13 +41,9 @@ namespace ResumeHub.Server.Services
                 using (var writer = new StreamWriter(stream))
                 {
                     await writer.WriteAsync(json);
+                    return true;
                 }
             }
-        }
-
-        public Task WriteAsync(string fileName, IEnumerable<T> data)
-        {
-            throw new NotImplementedException();
         }
     }
 }
