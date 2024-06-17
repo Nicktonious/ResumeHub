@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using ResumeHub.Server.Data;
 using ResumeHub.Server.Services;
 using System.Reflection.PortableExecutable;
 using System.Text;
